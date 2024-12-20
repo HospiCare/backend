@@ -9,7 +9,7 @@ class Patient(models.Model):
     adresse = models.TextField()
     telephone = models.CharField(max_length=10)
     email = models.EmailField(unique=True)
-    numero_securite_sociale = models.CharField(max_length=50, unique=True)
+    NSS = models.CharField(max_length=50, unique=True) #Numéro de Sécurité Sociale
     mot_de_passe = models.CharField(max_length=128)  
 
     class Meta:
