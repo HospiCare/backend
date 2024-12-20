@@ -3,6 +3,11 @@ ASGI config for app project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 
+This application is using BlackNoise to serve static files
+https://github.com/matthiask/blacknoise
+
+For deployement, Uvicorn and Gunicorn are used
+
 For more information on this file, see
 https://docs.djangoproject.com/en/5.1/howto/deployment/asgi/
 """
