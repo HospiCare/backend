@@ -12,4 +12,4 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('dpi_manager/', include('dpi_manager.urls')),  
     path('user/', include('users.urls'))
-
+]
