@@ -6,7 +6,9 @@ from django.utils.dateparse import parse_date
 import json
 import re
 from django.contrib.auth.hashers import make_password
-
+from django.contrib.auth import get_user_model
+from pyzbar.pyzbar import decode
+from PIL import Image
 
 @csrf_exempt
 def creer_dpi(request):
@@ -14,7 +16,6 @@ def creer_dpi(request):
         try:
             data = json.loads(request.body)
 
-            # Extraction des données du patient et du médecin
             nom_patient = data.get('nom_patient')
             prenom_patient = data.get('prenom_patient')
             date_naissance_str = data.get('date_naissance')
@@ -34,10 +35,10 @@ def creer_dpi(request):
             # Vérification que le numéro de téléphone contient exactement 10 chiffres
             if not re.match(r'^\d{10}$', telephone_patient):
                 return JsonResponse({'error': 'Le numéro de téléphone du patient doit être composé de 10 chiffres'}, status=400)
-            
+
             if not re.match(r'^\d{10}$', telephone_personne_contact):
                 return JsonResponse({'error': 'Le numéro de téléphone de la personne à contacter doit être composé de 10 chiffres'}, status=400)
-           
+
             # Vérification que l'email est non vide
             if not email_patient:
                 return JsonResponse({'error': 'L\'email est obligatoire'}, status=400)
@@ -47,7 +48,14 @@ def creer_dpi(request):
             if not date_naissance:
                 return JsonResponse({'error': 'Format de la date de naissance invalide'}, status=400)
 
-            # Création d'un nouveau patient
+            user = get_user_model().objects.create_user(
+                email=email_patient,
+                password=mot_de_passe,
+                first_name=nom_patient,
+                last_name=prenom_patient,
+                user_type='patient'  
+            )
+
             patient = Patient.objects.create(
                 nom=nom_patient,
                 prenom=prenom_patient,
@@ -55,17 +63,15 @@ def creer_dpi(request):
                 adresse=adresse_patient,
                 telephone=telephone_patient,
                 email=email_patient,
+                mot_de_passe= make_password(mot_de_passe), #Pour le hashage du mot de passe
                 NSS=NSS,
-                mot_de_passe= make_password(mot_de_passe) #Pour le hashage du mot de passe
             )
 
-            # Recherche du médecin
             try:
                 medecin = Medecin.objects.get(id=medecin_id)
             except ObjectDoesNotExist:
                 return JsonResponse({'error': 'Médecin non trouvé'}, status=400)
 
-            # Création du DPI
             dpi = Dpi.objects.create(
                 patient=patient,
                 medecin_traitant=medecin,
@@ -84,7 +90,6 @@ def creer_dpi(request):
 
     else:
         return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
-
 
 def rechercher_dpi_par_NSS(request):
     
@@ -131,3 +136,57 @@ def rechercher_dpi_par_NSS(request):
 
     else:
         return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
+    
+@csrf_exempt
+def rechercher_par_QRcode(request):
+    if request.method == 'POST':
+        try:
+            if 'qr_code' not in request.FILES:
+                return JsonResponse({'error': 'Aucune image de QR code fournie'}, status=400)
+            
+            qr_image = request.FILES['qr_code']
+            
+            image = Image.open(qr_image)
+            
+            # Décoder le QR code à partir de l'image
+            qr_data = decode(image)
+            
+            if not qr_data:
+                return JsonResponse({'error': 'QR code invalide ou non détecté'}, status=400)
+            
+            # Le QR code devrait contenir le NSS sous cette forme: 'NSS:le numéro de sécurité sociale du patient'
+            decoded_data = qr_data[0].data.decode('utf-8')
+            
+            if not decoded_data.startswith("NSS:"):
+                return JsonResponse({'error': 'QR code invalide, le format NSS attendu est manquant'}, status=400)
+            
+            nss = decoded_data.split("NSS:")[1]  
+
+            dpi = Dpi.objects.filter(patient__NSS=nss).first()
+            
+            if dpi:
+                return JsonResponse({
+                    'success': 'DPI trouvé',
+                    'dpi_id': dpi.id,
+                    'patient': {
+                        'nom': dpi.patient.nom,
+                        'prenom': dpi.patient.prenom,
+                        'NSS': dpi.patient.NSS,
+                        'adresse': dpi.patient.adresse,
+                        'telephone': dpi.patient.telephone,
+                        'email': dpi.patient.email,
+                    },
+                    'medecin_traitant': {
+                        'nom': dpi.medecin_traitant.nom,
+                        'prenom': dpi.medecin_traitant.prenom,
+                    },
+                    'mutuelle': dpi.mutuelle,
+                    'telephone_personne_contact': dpi.telephone_personne_contact,
+                })
+            else:
+                return JsonResponse({'error': 'Aucun DPI trouvé pour ce NSS'}, status=404)
+        
+        except Exception as e:
+            return JsonResponse({'error': f'Erreur serveur: {str(e)}'}, status=500)
+    
+    return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
