@@ -21,8 +21,11 @@ def login(request):
     """
     Allow users to login and obtain a token
     """
-    user = get_object_or_404(User, email=request.data["email"])
-    if not user.check_password(request.data["password"]):
+    email = request.data.get("email", "")
+    password = request.data.get("password", "")
+    user = get_object_or_404(User, email=email)
+
+    if not user.check_password(password):
         return Response(
             {"detail": "Invalid email/password."}, status=status.HTTP_404_NOT_FOUND
         )
@@ -92,9 +95,9 @@ def change_password(request):
     Allow an authenticated user to change heir password.
     """
     user = request.user
-    current_password = request.data.get("current_password")
-    new_password = request.data.get("new_password")
-    confirm_password = request.data.get("confirm_password")
+    current_password = request.data.get("current_password", "")
+    new_password = request.data.get("new_password", "")
+    confirm_password = request.data.get("confirm_password", "")
 
     if not user.check_password(current_password):
         return Response(

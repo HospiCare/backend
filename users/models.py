@@ -12,7 +12,7 @@ les type d'utilisateur:
     'laborantin'
     'radiologue'
 
-example of implimenting Profiles:
+example of implementing Profiles:
 class Patient(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='patient_profile')
     nss = models.PositiveIntegerField(unique=True) # Numero de securite social
@@ -82,3 +82,29 @@ class User(AbstractUser):
     objects = UserManager()
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name", "user_type"]
+
+
+class Patient(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='patient_profile')
+    date_naissance = models.DateField()
+    adresse = models.TextField()
+    telephone = models.CharField(max_length=10)
+    NSS = models.CharField(max_length=50, unique=True) #Numéro de Sécurité Sociale
+
+    def __str__(self):
+        """Retourne le nom et le prénom d'un objet de type Patient"""
+        return f"{self.user.first_name} {self.user.last_name}"
+
+
+class Medecin(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='medecin_profile')
+    date_naissance = models.DateField()
+    adresse = models.TextField()
+    telephone = models.CharField(max_length=10)
+
+    class Meta:
+        app_label = 'dpi_manager'  
+
+    def __str__(self):
+        """Retourne le nom et le prénom d'un objet de type Médecin"""
+        return f"Dr. {self.user.first_name} {self.user.last_name}"

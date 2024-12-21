@@ -1,13 +1,14 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import Dpi, Patient, Medecin
+from .models import Dpi
+from users.models import User, Patient, Medecin
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.dateparse import parse_date
 import json
 import re
-from django.contrib.auth.hashers import make_password
 
 
+# TODO: add authorization
 @csrf_exempt
 def creer_dpi(request):
     if request.method == "POST":
@@ -38,32 +39,35 @@ def creer_dpi(request):
             if not re.match(r'^\d{10}$', telephone_personne_contact):
                 return JsonResponse({'error': 'Le numéro de téléphone de la personne à contacter doit être composé de 10 chiffres'}, status=400)
            
-            # Vérification que l'email est non vide
-            if not email_patient:
-                return JsonResponse({'error': 'L\'email est obligatoire'}, status=400)
-
             # Conversion de la date de naissance en format Date
             date_naissance = parse_date(date_naissance_str)
             if not date_naissance:
                 return JsonResponse({'error': 'Format de la date de naissance invalide'}, status=400)
 
+            # Recherche du médecin
+            try:
+                medecin = Medecin.objects.get(user__id=medecin_id)
+            except ObjectDoesNotExist:
+                return JsonResponse({'error': 'Médecin non trouvé'}, status=400)
+
+            # Création d'un nouveau utilisateur
+            patient_user = User.objects.create(
+                email=email_patient,
+                first_name=nom_patient,
+                last_name=prenom_patient,
+                user_type="patient"
+            )
+            patient_user.set_password(mot_de_passe)
+            patient_user.save()
+
             # Création d'un nouveau patient
             patient = Patient.objects.create(
-                nom=nom_patient,
-                prenom=prenom_patient,
+                user=patient_user,
                 date_naissance=date_naissance,
                 adresse=adresse_patient,
                 telephone=telephone_patient,
-                email=email_patient,
                 NSS=NSS,
-                mot_de_passe= make_password(mot_de_passe) #Pour le hashage du mot de passe
             )
-
-            # Recherche du médecin
-            try:
-                medecin = Medecin.objects.get(id=medecin_id)
-            except ObjectDoesNotExist:
-                return JsonResponse({'error': 'Médecin non trouvé'}, status=400)
 
             # Création du DPI
             dpi = Dpi.objects.create(
@@ -105,17 +109,17 @@ def rechercher_dpi_par_NSS(request):
                 return JsonResponse({
                     'dpi_id': dpi.id,
                     'patient': {
-                        'nom': patient.nom,
-                        'prenom': patient.prenom,
+                        'nom': patient.user.first_name,
+                        'prenom': patient.user.last_name,
                         'date_naissance': patient.date_naissance,
                         'adresse': patient.adresse,
                         'telephone': patient.telephone,
-                        'email': patient.email,
+                        'email': patient.user.email,
                     },
                     'medecin_traitant': {
-                        'id': dpi.medecin_traitant.id,
-                        'nom': dpi.medecin_traitant.nom,
-                        'prenom': dpi.medecin_traitant.prenom,
+                        'id': dpi.medecin_traitant.user.id,
+                        'nom': dpi.medecin_traitant.user.first_name,
+                        'prenom': dpi.medecin_traitant.user.last_name,
                     },
                     'mutuelle': dpi.mutuelle,
                     'telephone_personne_contact': dpi.telephone_personne_contact,
