@@ -102,8 +102,7 @@ class Medecin(models.Model):
     adresse = models.TextField()
     telephone = models.CharField(max_length=10)
 
-    class Meta:
-        app_label = 'dpi_manager'  
+     
 
     def __str__(self):
         """Retourne le nom et le prénom d'un objet de type Médecin"""
