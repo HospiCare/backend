@@ -107,3 +107,26 @@ class Medecin(models.Model):
     def __str__(self):
         """Retourne le nom et le prénom d'un objet de type Médecin"""
         return f"Dr. {self.user.first_name} {self.user.last_name}"
+
+
+class Laborantin(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='laborantin_profile')
+    telephone = models.CharField(max_length=10)
+    department = models.CharField(max_length=255)
+    date_recrutement = models.DateField()
+
+    def __str__(self):
+        """Retourne le nom et le prénom d'un objet de type Laborantin"""
+        return f"Dr. {self.user.first_name} {self.user.last_name}"
+
+
+class Radiologue(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='radiologue_profile')
+    telephone = models.CharField(max_length=10)
+    specialization = models.CharField(max_length=255)
+    date_recrutement = models.DateField()
+
+    def __str__(self):
+        """Retourne le nom et le prénom d'un objet de type Radiologue"""
+        return f"Dr. {self.user.first_name} {self.user.last_name}"
+
