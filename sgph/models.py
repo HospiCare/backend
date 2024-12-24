@@ -1,7 +1,11 @@
 from django.db import models
+from consultations.models import Consultation
 
 
 class Ordonnance(models.Model):
+    consultation = models.OneToOneField(
+        Consultation, on_delete=models.CASCADE, related_name="ordonnance"
+    )
     validated = models.BooleanField(default=False)
     notes = models.TextField(blank=True)
 
