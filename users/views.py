@@ -4,14 +4,16 @@ from rest_framework.decorators import (
     permission_classes,
 )
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import status
 from rest_framework.authtoken.models import Token
 from django.shortcuts import get_object_or_404
 
 from .models import User
-from .serializers import UserSerializer
+from .serializers import UserSerializer, PatientSerializer, MedecinSerializer, \
+        LaborantinSerializer, RadiologueSerializer, InfirmierSerializer, \
+        LoginSerializer, FakeSerializer, ChangePasswordSerializer, UserUpdateSerializer
 from .permissions import IsAdmin
 
 
@@ -21,13 +23,17 @@ def login(request):
     """
     Allow users to login and obtain a token
     """
-    email = request.data.get("email", "")
-    password = request.data.get("password", "")
-    user = get_object_or_404(User, email=email)
+    serializer = LoginSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    email = serializer.validated_data.get("email", "")
+    password = serializer.validated_data.get("password", "")
+
+    user = get_object_or_404(User, email=email)
     if not user.check_password(password):
         return Response(
-            {"detail": "Invalid email/password."}, status=status.HTTP_404_NOT_FOUND
+            {"detail": "Wrong password."}, status=status.HTTP_400_BAD_REQUEST
         )
 
     serializer = UserSerializer(instance=user)
@@ -52,39 +58,55 @@ def logout(request):
 @permission_classes([IsAuthenticated, IsAdmin])
 def create_account(request):
     """
-    Allow an authenticated admin to create new users (except for admin & superuser types), and superuser to create all types of users.
+    Allow an authenticated admin to create new users with their profiles (except for admin & superuser types), and superuser to create all types of users.
     """
     serializer = UserSerializer(data=request.data)
-    if serializer.is_valid():
-        if User.objects.filter(email=request.data["email"]).exists():
-            return Response(
-                {"detail": "A user with this email already exists."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        if request.data["user_type"] in [
-            "admin",
-            "superuser",
-        ] and not IsAdminUser().has_permission(request, None):
-            return Response(
-                {"detail": "Only supersuer can create admin & superuser accounts."},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
-
-        user = User.objects.create(
-            email=request.data["email"],
-            first_name=request.data["first_name"],
-            last_name=request.data["last_name"],
-            user_type=request.data.get("user_type", "patient"),
+    email = serializer.validated_data.get("email")
+    if User.objects.filter(email=email).exists():
+        return Response(
+            {"detail": "A user with this email already exists."},
+            status=status.HTTP_400_BAD_REQUEST,
         )
-        user.set_password(request.data["password"])
-        user.save()
+
+    user_type = serializer.validated_data.get("user_type")
+    if user_type in ["admin", "superuser"] and not request.user.is_superuser:
+        return Response(
+            {"detail": "Only supersuer can create admin & superuser accounts."},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+
+    if user_type == "patient":
+        profile_serializer = PatientSerializer(data=request.data)
+    elif user_type == "medecin":
+        profile_serializer = MedecinSerializer(data=request.data)
+    elif user_type == "laborantin":
+        profile_serializer = LaborantinSerializer(data=request.data)
+    elif user_type == "radiologue":
+        profile_serializer = RadiologueSerializer(data=request.data)
+    elif user_type == "infirmier":
+        profile_serializer = InfirmierSerializer(data=request.data)
+    else:
+        profile_serializer = FakeSerializer(data=request.data)
+
+    if not profile_serializer.is_valid():
+        return Response(profile_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = serializer.create(serializer.validated_data)
+        profile_serializer.validated_data['user'] = user
+        profile = profile_serializer.create(profile_serializer.validated_data)
 
         response_serializer = UserSerializer(user)
-        token = Token.objects.create(user=user)
-        return Response({"token": token.key, "user": response_serializer.data})
+        return Response({"detail": f"{user_type} successfuly created", "user": response_serializer.data})
 
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Exception:
+        return Response(
+            {"detail": "An error occurred."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 @api_view(["PUT"])
@@ -94,11 +116,15 @@ def change_password(request):
     """
     Allow an authenticated user to change heir password.
     """
-    user = request.user
-    current_password = request.data.get("current_password", "")
-    new_password = request.data.get("new_password", "")
-    confirm_password = request.data.get("confirm_password", "")
+    serializer = ChangePasswordSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    current_password = serializer.validated_data.get("current_password")
+    new_password = serializer.validated_data.get("new_password")
+    confirm_password = serializer.validated_data.get("confirm_password")
+
+    user = request.user
     if not user.check_password(current_password):
         return Response(
             {"detail": "Current password is incorrect."},
@@ -119,13 +145,43 @@ def change_password(request):
     )
 
 
-# TODO: profile view
+@api_view(["PUT"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated, IsAdmin]) # only admins can change profiles
+def change_profile(request, id):
+    """
+    Allow admins to update user profile
+    """
+    user = get_object_or_404(User, id=id)
+
+    serializer = UserUpdateSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    try: # setting a unique feild with an existing value will trigger an exception
+        for field_name, value in serializer.validated_data.items():
+            if hasattr(user, field_name):
+                setattr(user, field_name, value) 
+
+        user.save()
+
+    except Exception:
+        return Response(
+            {"detail": "An error occurred. Make sure you are respecting unicity..."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    res_serializer = UserSerializer(instance=user)
+    return Response({"user": res_serializer.data})
+
+
 @api_view(["GET"])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def get_profile(request, id):
     """
     Allow authunticated users to view other's profiles
     """
-    return Response(
-        {"detail": "NOT Implimented yet"}, status=status.HTTP_501_NOT_IMPLEMENTED
-    )
+    user = get_object_or_404(User, id=id)
+    serializer = UserSerializer(instance=user)
+    return Response({"user": serializer.data})

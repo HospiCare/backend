@@ -16,6 +16,7 @@ class Migration(migrations.Migration):
             name='Ordonnance',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('consultation', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='consultation', to='consultations.consultation')),
                 ('validated', models.BooleanField(default=False)),
                 ('notes', models.TextField(blank=True)),
             ],
