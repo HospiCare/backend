@@ -88,6 +88,10 @@ def create_account(request):
         profile_serializer = RadiologueSerializer(data=request.data)
     elif user_type == "infirmier":
         profile_serializer = InfirmierSerializer(data=request.data)
+    elif user_type == "superuser":
+        serializer.validated_data["is_staff"] = True
+        serializer.validated_data["is_superuser"] = True
+        profile_serializer = FakeSerializer(data=request.data)
     else:
         profile_serializer = FakeSerializer(data=request.data)
 
@@ -97,7 +101,7 @@ def create_account(request):
     try:
         user = serializer.create(serializer.validated_data)
         profile_serializer.validated_data['user'] = user
-        profile = profile_serializer.create(profile_serializer.validated_data)
+        profile_serializer.create(profile_serializer.validated_data)
 
         response_serializer = UserSerializer(user)
         return Response({"detail": f"{user_type} successfuly created", "user": response_serializer.data})
@@ -178,10 +182,21 @@ def change_profile(request, id):
 @api_view(["GET"])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
-def get_profile(request, id):
+def get_user(request, id):
     """
     Allow authunticated users to view other's profiles
     """
     user = get_object_or_404(User, id=id)
     serializer = UserSerializer(instance=user)
+    return Response({"user": serializer.data})
+
+
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def get_profile(request):
+    """
+    Allow authunticated user to view their profile
+    """
+    serializer = UserSerializer(instance=request.user)
     return Response({"user": serializer.data})
