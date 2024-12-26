@@ -50,6 +50,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'users',
+    'sgph',
+    'bilan',
+    'consultations',
 
 ]
 MIDDLEWARE = [

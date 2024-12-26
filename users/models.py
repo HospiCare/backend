@@ -91,10 +91,6 @@ class Patient(models.Model):
     telephone = models.CharField(max_length=10)
     NSS = models.CharField(max_length=50, unique=True) #Numéro de Sécurité Sociale
 
-    def __str__(self):
-        """Retourne le nom et le prénom d'un objet de type Patient"""
-        return f"{self.user.first_name} {self.user.last_name}"
-
 
 class Medecin(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='medecin_profile')
@@ -102,8 +98,25 @@ class Medecin(models.Model):
     adresse = models.TextField()
     telephone = models.CharField(max_length=10)
 
-     
 
-    def __str__(self):
-        """Retourne le nom et le prénom d'un objet de type Médecin"""
-        return f"Dr. {self.user.first_name} {self.user.last_name}"
+class Laborantin(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='laborantin_profile')
+    telephone = models.CharField(max_length=10)
+    department = models.CharField(max_length=255)
+    date_recrutement = models.DateField()
+
+
+class Radiologue(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='radiologue_profile')
+    telephone = models.CharField(max_length=10)
+    specialization = models.CharField(max_length=255)
+    date_recrutement = models.DateField()
+
+
+# TODO: finish this
+class Infirmier(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='infirmier_profile')
+    telephone = models.CharField(max_length=10)
+    department = models.CharField(max_length=255)
+    date_recrutement = models.DateField()
+
