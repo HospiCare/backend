@@ -200,3 +200,4 @@ def get_profile(request):
     """
     serializer = UserSerializer(instance=request.user)
     return Response({"user": serializer.data})
+

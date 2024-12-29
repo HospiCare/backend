@@ -11,5 +11,10 @@ urlpatterns = [
     path('docs/', include('docs.urls')),
     path('admin/', admin.site.urls),
     path('dpi_manager/', include('dpi_manager.urls')),  
-    path('user/', include('users.urls'))
+    path('user/', include('users.urls')),
+    path('bilan/', include('bilan.urls')),     
+    path('consultation/', include('consultations.urls')),
+    path('sgph/', include('sgph.urls')),
+    path('soins/', include('soins.urls')),
+ 
 ]

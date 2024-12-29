@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'sgph',
     'bilan',
     'consultations',
+    'soins',
 
 ]
 MIDDLEWARE = [

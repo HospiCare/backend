@@ -4,7 +4,7 @@ from consultations.models import Consultation
 
 class Ordonnance(models.Model):
     consultation = models.OneToOneField(
-        Consultation, on_delete=models.CASCADE, related_name="ordonnance"
+        Consultation, null=True, on_delete=models.CASCADE, related_name="ordonnance"
     )
     validated = models.BooleanField(default=False)
     notes = models.TextField(blank=True)
@@ -12,7 +12,7 @@ class Ordonnance(models.Model):
 
 class Medicament(models.Model):
     ordonnance = models.ForeignKey(
-        Ordonnance, on_delete=models.CASCADE, related_name='medicaments'
+        Ordonnance,null=True, on_delete=models.CASCADE, related_name='medicaments'
     )
     name = models.CharField(max_length=200)
     dosage = models.CharField(max_length=100)
