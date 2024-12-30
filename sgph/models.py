@@ -17,4 +17,4 @@ class Medicament(models.Model):
     name = models.CharField(max_length=200)
     dosage = models.CharField(max_length=100)
     frequency = models.CharField(max_length=100)
-    duration = models.IntegerField()
+    duration = models.CharField(max_length=20)

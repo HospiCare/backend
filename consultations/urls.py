@@ -12,4 +12,7 @@ urlpatterns = [
     path("<int:id>/resume/", views.get_resume),
     path("<int:id>/certificat/create/", views.create_certificat),
     path("<int:id>/certificat/", views.get_certificat),
+    path("<int:consultation_id>/creer_ordonnance/", views.creer_ordonnance),
+    path("<int:ordonnance_id>/get_ordonnance/", views.get_ordonnance),
 
+]
