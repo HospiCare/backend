@@ -257,3 +257,66 @@ def generer_graphe_empile(donnees_ancien, donnees_nouveau, patient_id, consultat
     return os.path.join(settings.MEDIA_URL, 'graphe_généré', chemin_fichier_relatif)
 
 
+
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated, IsLaborantin])
+def afficher_liste_bilans(request):
+    try:
+        
+        user = request.user
+        bilans = None
+        data = []
+
+
+        if IsLaborantin().has_permission(request, None):
+            try:
+                laborantin = Laborantin.objects.get(user=user)
+            except Laborantin.DoesNotExist:
+                return Response({"error": "Laborantin non trouvé."}, status=status.HTTP_404_NOT_FOUND)
+
+
+            bilans = BilanBiologique.objects.filter(laborantin=laborantin).order_by('-consultation__date')
+
+
+        elif IsRadiologue().has_permission(request, None):
+            try:
+                radiologue = Radiologue.objects.get(user=user)
+            except Radiologue.DoesNotExist:
+                return Response({"error": "Radiologue non trouvé."}, status=status.HTTP_404_NOT_FOUND)
+
+
+            bilans = BilanRadiologique.objects.filter(radiologue=radiologue).order_by('-consultation__date')
+
+
+        else:
+            return Response({"error": "Utilisateur non autorisé à afficher les bilans."}, status=status.HTTP_403_FORBIDDEN)
+
+
+       
+
+        data = []
+        for bilan in bilans:
+            patient = bilan.consultation.dpi.patient
+            medecin = bilan.consultation.dpi.medecin_traitant
+            data.append({
+                'id_bilan': bilan.id,
+                'type_bilan': bilan.test_type if bilan.test_type else None, # Gérer le cas où type_bilan est nul
+                'date_creation_consultation': bilan.consultation.date,
+                'patient': {
+                    'id': patient.user.id,
+                    'nom': patient.user.first_name,
+                    'prenom': patient.user.last_name,
+                },
+                'medecin': {
+                    'email': medecin.user.email,
+                } if medecin else None, 
+                'graphique': bilan.graphique,
+                'resultat': bilan.result
+            })
+
+        return Response(data, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({"error": f"Erreur lors de la récupération des bilans : {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

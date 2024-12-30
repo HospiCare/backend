@@ -7,7 +7,7 @@ class Bilan(models.Model):
     consultation = models.OneToOneField(
         Consultation, on_delete=models.CASCADE, related_name="%(class)s"
     )
-    date = models.DateTimeField(auto_now_add=True)
+    date = models.DateField(auto_now_add=True)
 
     class Meta:
         abstract = True
