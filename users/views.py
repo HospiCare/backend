@@ -14,9 +14,9 @@ from .models import *
 from .serializers import UserSerializer, PatientSerializer, MedecinSerializer, \
         LaborantinSerializer, RadiologueSerializer, InfirmierSerializer, \
         LoginSerializer, FakeSerializer, ChangePasswordSerializer, UserUpdateSerializer
-from .permissions import IsAdmin, IsMedecin
-
+from .permissions import IsAdmin, IsMedecin, can_get_obj
 from django.db.models import Q
+
 
 
 @api_view(["POST"])
@@ -189,6 +189,9 @@ def get_user(request, id):
     Allow authunticated users to view other's profiles
     """
     user = get_object_or_404(User, id=id)
+    if not can_get_obj(request.user, user):
+        return Response({"details": "You are not allowed to view details about this user"})
+
     serializer = UserSerializer(instance=user)
     return Response({"user": serializer.data})
 

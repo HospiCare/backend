@@ -6,6 +6,7 @@ from rest_framework.decorators import (
 )
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from users.permissions import can_get_obj, IsMedecin
+
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
@@ -17,6 +18,7 @@ from consultations.serializers import (
     ResumeSerializer,
     CertificatSerializer,
 )
+
 
 
 @api_view(["POST"])
@@ -142,4 +144,5 @@ def get_certificat(request, id):
         )
 
     res_serializer = CertificatSerializer(instance=certificat)
+
     return Response({"certificat": res_serializer.data})
