@@ -18,7 +18,9 @@ from consultations.serializers import (
     ResumeSerializer,
     CertificatSerializer,
 )
-
+from sgph.serializers import OrdonnanceSerializer, MedicamentSerializer
+from sgph.models import Ordonnance, Medicament
+from django.shortcuts import get_object_or_404
 
 
 @api_view(["POST"])
@@ -146,3 +148,80 @@ def get_certificat(request, id):
     res_serializer = CertificatSerializer(instance=certificat)
 
     return Response({"certificat": res_serializer.data})
+
+
+
+
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated, IsMedecin])
+def creer_ordonnance(request, consultation_id):
+    try:
+        consultation = Consultation.objects.get(id=consultation_id)
+
+        if hasattr(consultation, 'ordonnance'):
+            return Response(
+                {"error": "Une ordonnance existe déjà pour cette consultation."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        ordonnance_data = request.data.get('ordonnance', {})
+        notes = ordonnance_data.get('notes', '')
+
+        ordonnance = Ordonnance.objects.create(
+            consultation=consultation,
+            notes=notes
+        )
+
+        medicaments_data = request.data.get('medicaments', [])
+        for medicament_data in medicaments_data:
+            Medicament.objects.create(
+                ordonnance=ordonnance,
+                name=medicament_data['name'],
+                dosage=medicament_data['dosage'],
+                frequency=medicament_data['frequency'],
+                duration=medicament_data['duration']
+            )
+
+        return Response(
+            {"success": "Ordonnance créée avec succès"},
+            status=status.HTTP_201_CREATED
+        )
+
+    except Consultation.DoesNotExist:
+        return Response(
+            {"error": "Consultation introuvable."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except KeyError as e:
+        return Response(
+            {"error": f"Champ manquant: {str(e)}"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    except Exception as e:
+        return Response(
+            {"error": f"Erreur interne: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+
+def get_ordonnance(request, ordonnance_id):
+    try:
+        ordonnance = Ordonnance.objects.prefetch_related('medicaments').get(id=ordonnance_id)
+
+        if not can_get_obj(request.user, ordonnance):
+            return Response({"error": "Permission refusée."}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = OrdonnanceSerializer(ordonnance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    except Ordonnance.DoesNotExist:
+        return Response({"error": "Ordonnance introuvable."}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": f"Erreur interne : {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
