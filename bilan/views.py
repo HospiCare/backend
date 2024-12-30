@@ -9,8 +9,9 @@ from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from users.permissions import can_get_obj, IsMedecin,IsLaborantin,IsRadiologue
+from users.permissions import *
 from . serializers import *
+from django.shortcuts import get_object_or_404
 
 @api_view(["POST"])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
@@ -320,3 +321,43 @@ def afficher_liste_bilans(request):
 
     except Exception as e:
         return Response({"error": f"Erreur lors de la récupération des bilans : {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def get_bilan_biologique(request, id):
+    try:
+        bilan = get_object_or_404(BilanBiologique, id=id) 
+    except BilanBiologique.DoesNotExist: 
+        return Response({"detail": "Bilan non trouvé."}, status=status.HTTP_404_NOT_FOUND)
+
+    if not can_get_obj(request.user, bilan):
+        return Response(
+            {"detail": "Vous n'êtes pas autorisé à consulter ce bilan."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    serializer = BilanBiologiqueSerializer(bilan) 
+
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def get_bilan_radiologique(request, id):
+    try:
+        bilan = get_object_or_404(BilanRadiologique, id=id) 
+    except BilanRadiologique.DoesNotExist: 
+        return Response({"detail": "Bilan non trouvé."}, status=status.HTTP_404_NOT_FOUND)
+
+    if not can_get_obj(request.user, bilan):
+        return Response(
+            {"detail": "Vous n'êtes pas autorisé à consulter ce bilan."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    serializer = BilanRadiologiqueSerializer(bilan) 
+
+    return Response(serializer.data, status=status.HTTP_200_OK)
