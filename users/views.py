@@ -10,11 +10,13 @@ from rest_framework.views import status
 from rest_framework.authtoken.models import Token
 from django.shortcuts import get_object_or_404
 
-from .models import User
+from .models import *
 from .serializers import UserSerializer, PatientSerializer, MedecinSerializer, \
         LaborantinSerializer, RadiologueSerializer, InfirmierSerializer, \
         LoginSerializer, FakeSerializer, ChangePasswordSerializer, UserUpdateSerializer
-from .permissions import IsAdmin
+from .permissions import IsAdmin, IsMedecin
+
+from django.db.models import Q
 
 
 @api_view(["POST"])
@@ -200,3 +202,120 @@ def get_profile(request):
     """
     serializer = UserSerializer(instance=request.user)
     return Response({"user": serializer.data})
+
+
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated, IsMedecin])
+def rechercher_patients(request):
+    search_term = request.query_params.get('search', '')  
+
+    if search_term:
+        users = User.objects.filter(
+            Q(first_name__icontains=search_term) | Q(last_name__icontains=search_term),
+            user_type='patient'  
+        )
+        
+        if users.exists():
+            patients = Patient.objects.filter(user__in=users)
+            resultat = [
+                {
+                    'first_name': patient.user.first_name,
+                    'last_name': patient.user.last_name
+                }
+                for patient in patients
+            ]
+            return Response(resultat, status=status.HTTP_200_OK)
+        else:
+            return Response({'message': 'Aucun patient trouvé.'}, status=status.HTTP_404_NOT_FOUND)
+
+    else:
+        return Response({'error': 'Aucun terme de recherche fourni.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated, IsMedecin])
+def rechercher_laborantins(request):
+    search_term = request.query_params.get('search', '')  
+
+    if search_term:
+        users = User.objects.filter(
+            Q(first_name__icontains=search_term) | Q(last_name__icontains=search_term),
+            user_type='laborantin'  
+        )
+        
+        if users.exists():
+            laborantins = Laborantin.objects.filter(user__in=users)
+            resultat = [
+                {
+                    'first_name': patient.user.first_name,
+                    'last_name': patient.user.last_name
+                }
+                for patient in laborantins
+            ]
+            return Response(resultat, status=status.HTTP_200_OK)
+        else:
+            return Response({'message': 'Aucun laborantin trouvé.'}, status=status.HTTP_404_NOT_FOUND)
+
+    else:
+        return Response({'error': 'Aucun terme de recherche fourni.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated, IsMedecin])
+def rechercher_radiologues(request):
+    search_term = request.query_params.get('search', '')  
+
+    if search_term:
+        users = User.objects.filter(
+            Q(first_name__icontains=search_term) | Q(last_name__icontains=search_term),
+            user_type='radiologue'  
+        )
+        
+        if users.exists():
+            radiologues = Radiologue.objects.filter(user__in=users)
+            resultat = [
+                {
+                    'first_name': patient.user.first_name,
+                    'last_name': patient.user.last_name
+                }
+                for patient in radiologues
+            ]
+            return Response(resultat, status=status.HTTP_200_OK)
+        else:
+            return Response({'message': 'Aucun radiologue trouvé.'}, status=status.HTTP_404_NOT_FOUND)
+
+    else:
+        return Response({'error': 'Aucun terme de recherche fourni.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated, IsMedecin])
+def rechercher_infirmiers(request):
+    search_term = request.query_params.get('search', '')  
+
+    if search_term:
+        users = User.objects.filter(
+            Q(first_name__icontains=search_term) | Q(last_name__icontains=search_term),
+            user_type='infirmier'  
+        )
+        
+        if users.exists():
+            infirmiers = Infirmier.objects.filter(user__in=users)
+            resultat = [
+                {
+                    'first_name': patient.user.first_name,
+                    'last_name': patient.user.last_name
+                }
+                for patient in infirmiers
+            ]
+            return Response(resultat, status=status.HTTP_200_OK)
+        else:
+            return Response({'message': 'Aucun infirmier trouvé.'}, status=status.HTTP_404_NOT_FOUND)
+
+    else:
+        return Response({'error': 'Aucun terme de recherche fourni.'}, status=status.HTTP_400_BAD_REQUEST)

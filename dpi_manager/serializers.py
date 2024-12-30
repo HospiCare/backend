@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 class DpiSerializer(serializers.ModelSerializer):
     patient = serializers.PrimaryKeyRelatedField(queryset=Patient.objects.all())
     medecin_traitant = serializers.PrimaryKeyRelatedField(queryset=Medecin.objects.all())
-    cree_par = serializers.PrimaryKeyRelatedField(queryset=get_user_model().objects.all())
+    cree_par = serializers.CharField()
     qr_code = serializers.ImageField(read_only=True)
 
     class Meta:

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Graphique des analyses</title>
+</head>
+<body>
+    <h1>Graphique des analyses</h1>
+    {% if image_url %}
+        <img src="{{ image_url }}" alt="Graphique des analyses">
+    {% else %}
+        <p>Erreur lors de la génération du graphique.</p>
+    {% endif %}
+</body>
+</html>

@@ -1,4 +1,4 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, authentication_classes,permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Dpi
@@ -9,18 +9,22 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.exceptions import NotFound
 from PIL import Image
 from pyzbar.pyzbar import decode
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+from users.permissions import IsAdmin, IsMedecin
 
-
-#Reste à verifier l'auth
 @csrf_exempt
 @api_view(["POST"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])  
 def creer_dpi(request):
     try:
+
         data = request.data
         serializer = DpiCreationInputSerializer(data=data)
         if not serializer.is_valid():
-         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         nom_patient = data.get('nom_patient')
         prenom_patient = data.get('prenom_patient')
         date_naissance_str = data.get('date_naissance')
@@ -32,7 +36,12 @@ def creer_dpi(request):
         medecin_id = data.get('medecin_id')
         mutuelle = data.get('mutuelle')
         telephone_personne_contact = data.get('telephone_personne_contact')
- 
+
+        try:
+            medecin = Medecin.objects.get(id=medecin_id)
+        except Medecin.DoesNotExist:
+            return Response({'error': f'Médecin avec ID {medecin_id} introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+
         user = get_user_model().objects.create_user(
             email=email_patient,
             password=mot_de_passe,
@@ -49,19 +58,24 @@ def creer_dpi(request):
             NSS=NSS
         )
 
-        medecin = Medecin.objects.get(id=medecin_id)
-
-       
+        if request.user.user_type == 'medecin':
+            cree_par_value = f"Médecin : {request.user.get_full_name()}"
+        elif request.user.is_superuser or request.user.user_type == 'admin':
+            cree_par_value = f"Admin : {request.user.get_full_name()}"
+        else:
+            return Response(
+                {"error": "Seuls un médecin ou un administrateur peuvent créer un DPI."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         dpi = Dpi.objects.create(
             patient=patient,
             medecin_traitant=medecin,
             mutuelle=mutuelle,
-            telephone_personne_contact=telephone_personne_contact
+            telephone_personne_contact=telephone_personne_contact,
+            cree_par=cree_par_value  
         )
 
-    
         dpi_serializer = DpiSerializer(dpi)
-
         return Response({'success': 'DPI créé avec succès', 'dpi': dpi_serializer.data}, status=status.HTTP_201_CREATED)
 
     except Exception as e:
@@ -70,6 +84,8 @@ def creer_dpi(request):
 
 
 @api_view(["GET"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated]) 
 def rechercher_dpi_par_NSS(request):
     NSS = request.query_params.get("NSS")  
     if not NSS:
@@ -106,6 +122,8 @@ def rechercher_dpi_par_NSS(request):
         raise NotFound('DPI non trouvé pour ce patient.')
     
 @api_view(['POST'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated]) 
 def rechercher_par_QRcode(request):
     try:
         if 'qr_code' not in request.FILES:
