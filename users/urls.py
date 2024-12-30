@@ -10,5 +10,9 @@ urlpatterns = [
     path("change_password/", views.change_password),
     path("<int:id>/update/", views.change_profile),
     path("<int:id>/", views.get_user),
-    path("profile/", views.get_profile),
+    path("rechercher_patients/", views.rechercher_patients),
+    path("rechercher_laborantins/", views.rechercher_laborantins),
+    path("rechercher_radiologues/", views.rechercher_radiologues),
+    path("rechercher_infirmiers/", views.rechercher_infirmiers),
+
 ]

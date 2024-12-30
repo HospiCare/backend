@@ -12,4 +12,4 @@ urlpatterns = [
     path("<int:id>/resume/", views.get_resume),
     path("<int:id>/certificat/create/", views.create_certificat),
     path("<int:id>/certificat/", views.get_certificat),
-]
+

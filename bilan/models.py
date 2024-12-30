@@ -7,7 +7,7 @@ class Bilan(models.Model):
     consultation = models.OneToOneField(
         Consultation, on_delete=models.CASCADE, related_name="%(class)s"
     )
-    date = models.DateField()
+    date = models.DateField(auto_now_add=True)
 
     class Meta:
         abstract = True
@@ -15,9 +15,16 @@ class Bilan(models.Model):
 
 class BilanBiologique(Bilan):
     laborantin = models.ForeignKey(Laborantin, on_delete=models.CASCADE, related_name="bilans_biologiques_laborantin")
-    test_type = models.CharField(max_length=100)
-    result = models.TextField()
-    graphique = models.JSONField() # required data to generate the graph
+    TYPE_BILAN_CHOICES = [
+        ('Bilan sanguin', 'Bilan sanguin'),
+        ('Bilan d\'urine', 'Bilan d\'urine'),
+        ('Bilan hepatique', 'Bilan hépatique'),
+        ('Bilan renal', 'Bilan rénal'),
+    ]
+
+    test_type = models.CharField(max_length=100, choices=TYPE_BILAN_CHOICES, default='Bilan sanguin') 
+    result = models.JSONField(default=dict, blank=True, null=True)  # Utilisation de JSONField pour stocker les résultats comme dictionnaire
+    graphique = models.JSONField(null=True, blank=True) 
 
 
 class BilanRadiologique(Bilan):
