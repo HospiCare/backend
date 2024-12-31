@@ -15,8 +15,8 @@ from consultations.models import Consultation
 from django.core.exceptions import ObjectDoesNotExist
 
 @api_view(["POST"])
-#@authentication_classes([SessionAuthentication, TokenAuthentication])
-#@permission_classes([IsAuthenticated, IsInfirmier])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated, IsInfirmier])
 def remplir_soins(request):
     try:
         data = request.data
