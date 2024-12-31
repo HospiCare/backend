@@ -11,28 +11,28 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Soins
 from .serializers import SoinsSerializer
-from dpi_manager.models import Dpi
+from consultations.models import Consultation
 from django.core.exceptions import ObjectDoesNotExist
 
 @api_view(["POST"])
-@authentication_classes([SessionAuthentication, TokenAuthentication])
-@permission_classes([IsAuthenticated, IsInfirmier])
+#@authentication_classes([SessionAuthentication, TokenAuthentication])
+#@permission_classes([IsAuthenticated, IsInfirmier])
 def remplir_soins(request):
     try:
         data = request.data
         
-        # Get the Dpi associated with the soins
-        dpi_id = data.get('dpi')
+        consultation_id = data.get('consultation')
+        print(consultation_id)
         try:
-            dpi = Dpi.objects.get(id=dpi_id)
+            consultation = Consultation.objects.get(id=consultation_id)
         except ObjectDoesNotExist:
-            return Response({'error': 'DPI not found'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Consultation not found'}, status=status.HTTP_400_BAD_REQUEST)
         
         # Prepare the Soins data
         soins_data = {
             'soins_donnés': data.get('soins_donnés', ''),
             'notes': data.get('notes', ''),
-            'dpi': dpi.id
+            'consultation': consultation.id
         }
         # Create Soins
         soins_serializer = SoinsSerializer(data=soins_data)

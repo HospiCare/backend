@@ -1,8 +1,8 @@
 from rest_framework import serializers
 from .models import Soins
-from dpi_manager.models import Dpi
+from consultations.models import Consultation
 
 class SoinsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Soins
-        fields = ['id', 'date', 'soins_donnés', 'notes', 'dpi']
+        fields = ['id', 'date', 'soins_donnés', 'notes', 'consultation']
