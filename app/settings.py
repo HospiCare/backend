@@ -47,16 +47,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'dpi_manager',
-    'docs',
+
     'rest_framework',
+    'rest_framework_api_key',
     'rest_framework.authtoken',
+
+    'docs',
+    'dpi_manager',
     'users',
     'sgph',
     'bilan',
     'consultations',
-
 ]
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
