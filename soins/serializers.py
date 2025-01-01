@@ -5,4 +5,4 @@ from consultations.models import Consultation
 class SoinsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Soins
-        fields = ['id', 'date', 'soins_donnés', 'notes', 'consultation']
+        fields = ['id', 'date', 'soins_donnés', 'notes', 'consultation', 'infirmier']

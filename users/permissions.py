@@ -3,6 +3,7 @@ from bilan.models import *
 from consultations.models import *
 from users.models import *
 from sgph.models import Ordonnance
+from soins.models import Soins
 from abc import ABC, abstractmethod
 
 class UserTypePermission(BasePermission):  
@@ -78,16 +79,28 @@ class BilanRadiologiquePermissionChecker(ObjectPermissionChecker):
         patient = dpi.patient
         medecin = bilan.consultation.dpi.medecin_traitant
         return user == patient.user or user == medecin.user
-
+    
 class OrdonnancePermissionChecker(ObjectPermissionChecker):
     def has_object_permission(self, user, ordonnance):
-        if user.user_type in ["superuser", "admin", "medecin"]:
+        if user.user_type in ["superuser", "admin", "infirmier"]:
             return True
         
         dpi = ordonnance.consultation.dpi
         patient = dpi.patient
-        #reste à ajouter l'infirmier
-        return user.id == patient.user_id
+        medecin = dpi.medecin_traitant
+        
+        return user.id == patient.user_id or user.id == medecin.user_id 
+
+
+class SoinsPermissionChecker(ObjectPermissionChecker):
+    def has_object_permission(self, user, soins):
+        if user.user_type in ["superuser", "admin"]:
+            return True
+        
+        medecin = soins.consultation.dpi.medecin_traitant
+        patient = soins.consultation.dpi.patient 
+
+        return user.id == soins.infirmier.user_id or user.id == patient.user_id or user.id == medecin.user_id
 
 def can_get_obj(user, obj):
     permission_checker = {
@@ -98,6 +111,7 @@ def can_get_obj(user, obj):
         BilanBiologique: BilanBiologiquePermissionChecker(),
         BilanRadiologique: BilanRadiologiquePermissionChecker(),
         Ordonnance: OrdonnancePermissionChecker(),
+        Soins: SoinsPermissionChecker(),
     }.get(obj.__class__)
 
     if permission_checker:
