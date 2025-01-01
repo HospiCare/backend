@@ -16,6 +16,7 @@ urlpatterns = [
     path('user/', include('users.urls')),
     path('bilan/', include('bilan.urls')),
     path('consultation/', include('consultations.urls')),
+    path('soins/', include('soins.urls')),
 
 ]
 if settings.DEBUG:
