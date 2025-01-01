@@ -16,7 +16,9 @@ urlpatterns = [
     path('user/', include('users.urls')),
     path('bilan/', include('bilan.urls')),
     path('consultation/', include('consultations.urls')),
+    path('sgph/', include('sgph.urls')),
 
 ]
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
