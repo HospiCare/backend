@@ -11,10 +11,12 @@ HospiCare documentation
    :maxdepth: 2
    :caption: Contents:
 
-User Model
-
-.. automodule:: users.models
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. toctree::
+   source/app
+   source/users
+   source/bilan
+   source/consultations
+   source/dpi_manager
+   source/sgph
+   source/soins
 

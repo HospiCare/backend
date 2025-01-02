@@ -1,7 +1,7 @@
 # backend
 The backend side of HospiCare
 
-## Idiots(me included xD)' guide
+## Dev guide
 For fedora users install these:
 ```sh
 sudo dnf install mysql mysql-devel python3-devel pkgconf

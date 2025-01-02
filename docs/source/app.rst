@@ -1,9 +1,6 @@
 app package
 ===========
 
-Submodules
-----------
-
 app.asgi module
 ---------------
 
@@ -36,10 +33,3 @@ app.wsgi module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
-
-.. automodule:: app
-   :members:
-   :undoc-members:
-   :show-inheritance:
