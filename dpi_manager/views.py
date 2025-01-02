@@ -18,6 +18,11 @@ from users.permissions import IsAdmin, IsMedecin
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])  
 def creer_dpi(request):
+    if not (request.user.user_type == 'medecin' or request.user.user_type == 'admin'):
+        return Response(
+            {"error": "Seuls un médecin ou un administrateur peuvent créer un DPI."},
+            status=status.HTTP_403_FORBIDDEN
+        )
     try:
 
         data = request.data
@@ -62,11 +67,7 @@ def creer_dpi(request):
             cree_par_value = f"Médecin : {request.user.get_full_name()}"
         elif request.user.is_superuser or request.user.user_type == 'admin':
             cree_par_value = f"Admin : {request.user.get_full_name()}"
-        else:
-            return Response(
-                {"error": "Seuls un médecin ou un administrateur peuvent créer un DPI."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        
         dpi = Dpi.objects.create(
             patient=patient,
             medecin_traitant=medecin,
@@ -85,7 +86,7 @@ def creer_dpi(request):
 
 @api_view(["GET"])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
-@permission_classes([IsAuthenticated]) 
+@permission_classes([IsAuthenticated, IsMedecin]) 
 def rechercher_dpi_par_NSS(request):
     NSS = request.query_params.get("NSS")  
     if not NSS:
@@ -123,7 +124,7 @@ def rechercher_dpi_par_NSS(request):
     
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
-@permission_classes([IsAuthenticated]) 
+@permission_classes([IsAuthenticated, IsMedecin]) 
 def rechercher_par_QRcode(request):
     try:
         if 'qr_code' not in request.FILES:
