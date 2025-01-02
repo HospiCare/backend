@@ -178,3 +178,46 @@ def rechercher_par_QRcode(request):
 
     except Exception as e:
         return Response({'error': f'Erreur serveur: {str(e)}'}, status=500)
+    
+
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated, IsMedecin])
+def afficher_liste_dpi(request):
+    try:
+        user = request.user
+        dpis = None
+        data = []
+
+        if IsMedecin().has_permission(request, None):
+            try:
+                medecin = Medecin.objects.get(user=user)
+            except Medecin.DoesNotExist:
+                return Response({"error": "Medecin non trouvé."}, status=status.HTTP_404_NOT_FOUND)
+
+            dpis = Dpi.objects.filter(medecin_traitant=medecin).order_by('-date_creation')
+
+        else:
+            return Response({"error": "Utilisateur non autorisé à afficher les dpis."}, status=status.HTTP_403_FORBIDDEN)
+
+        for dpi in dpis:
+            patient = dpi.patient
+            data.append({
+                'id_dpi': dpi.id,
+                'mutuelle': dpi.mutuelle,
+                'telephone_contact': dpi.telephone_personne_contact,
+                'date_creation': dpi.date_creation.strftime('%Y-%m-%d %H:%M:%S'),
+                'patient': {
+                    'id': patient.user.id,
+                    'nom': patient.user.first_name,
+                    'prenom': patient.user.last_name,
+                    'nss': patient.NSS,
+                },
+                'qr_code_url': dpi.qr_code.url if dpi.qr_code else None,
+            })
+
+        return Response(data, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({"error": f"Erreur lors de la récupération des DPI : {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
