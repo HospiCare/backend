@@ -204,15 +204,17 @@ def afficher_liste_dpi(request):
         for dpi in dpis:
             patient = dpi.patient
             data.append({
+                'dpi':{
                 'id_dpi': dpi.id,
                 'mutuelle': dpi.mutuelle,
-                'telephone_contact': dpi.telephone_personne_contact,
-                'date_creation': dpi.date_creation.strftime('%Y-%m-%d %H:%M:%S'),
+                'phone': dpi.telephone_personne_contact,
+                'creationDate': dpi.date_creation.strftime('%Y-%m-%d %H:%M:%S'),
+                },
                 'patient': {
                     'id': patient.user.id,
-                    'nom': patient.user.first_name,
-                    'prenom': patient.user.last_name,
+                    'name':f"{patient.user.first_name} {patient.user.last_name}",
                     'nss': patient.NSS,
+                    'email':patient.user.email 
                 },
                 'qr_code_url': dpi.qr_code.url if dpi.qr_code else None,
             })
