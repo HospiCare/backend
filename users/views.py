@@ -334,3 +334,39 @@ def get_list_medecins(request):
     medecins = User.objects.filter(user_type='medecin')
     serializer = UserSerializer(medecins, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated, IsMedecin])
+def get_list_laborantins(request):
+    """
+    Allow medecin & admins to find the list of laborantins
+    """
+    laborantins = User.objects.filter(user_type='laborantin')
+    serializer = UserSerializer(laborantins, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated, IsMedecin])
+def get_list_radiologues(request):
+    """
+    Allow medecin & admins to find the list of radiologues
+    """
+    radiologues = User.objects.filter(user_type='radiologue')
+    serializer = UserSerializer(radiologues, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated, IsMedecin])
+def get_list_infirmiers(request):
+    """
+    Allow medecin & admins to find the list of infirmiers
+    """
+    infirmiers = User.objects.filter(user_type='infirmier')
+    serializer = UserSerializer(infirmiers, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)

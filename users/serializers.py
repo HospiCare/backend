@@ -82,7 +82,7 @@ class InfirmierSerializer(serializers.ModelSerializer):
     class Meta:
         model = Infirmier
         # TODO: fix the fields
-        fields = ["telephone", "specialization", "date_recrutement"]
+        fields = ["telephone", "department", "date_recrutement"]
 
     def create(self, validated_data):
         return Infirmier.objects.create(**validated_data)

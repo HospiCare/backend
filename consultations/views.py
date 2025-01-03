@@ -36,7 +36,7 @@ def create_consultation(request):
 
     consultation = Consultation.objects.create(**serializer.validated_data)
     res_serializer = ConsultationSerializer(instance=consultation)
-    return Response({"consultation": res_serializer.data})
+    return Response({"consultation": res_serializer.data}, status=status.HTTP_201_CREATED)
 
 
 @api_view(["GET"])
@@ -71,7 +71,7 @@ def create_frais(request, id):
     frais = FraisSerializer().create(serializer.validated_data)
 
     res_serializer = FraisSerializer(instance=frais)
-    return Response({"frais": res_serializer.data})
+    return Response({"frais": res_serializer.data}, status=status.HTTP_201_CREATED)
 
 
 @api_view(["GET"])
@@ -101,7 +101,7 @@ def create_resume(request, id):
     resume = ResumeSerializer().create(serializer.validated_data)
 
     res_serializer = ResumeSerializer(instance=resume)
-    return Response({"resume": res_serializer.data})
+    return Response({"resume": res_serializer.data}, status=status.HTTP_201_CREATED)
 
 
 @api_view(["GET"])
@@ -131,7 +131,7 @@ def create_certificat(request, id):
     certificat = CertificatSerializer().create(serializer.validated_data)
 
     res_serializer = CertificatSerializer(instance=certificat)
-    return Response({"certificat": res_serializer.data})
+    return Response({"certificat": res_serializer.data}, status=status.HTTP_201_CREATED)
 
 
 @api_view(["GET"])
