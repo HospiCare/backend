@@ -231,7 +231,7 @@ def get_ordonnance(request, ordonnance_id):
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
-def afficher_consultations(request, patient_id):
+def afficher_consultations(request, patientId):
     try:
         user = request.user
         data = []
@@ -243,11 +243,11 @@ def afficher_consultations(request, patient_id):
             except Medecin.DoesNotExist:
                 return Response({"error": "Médecin non trouvé."}, status=status.HTTP_404_NOT_FOUND)
 
-            if not patient_id:
+            if not patientId:
                 return Response({"error": "ID du patient manquant."}, status=status.HTTP_400_BAD_REQUEST)
 
             try:
-                patient = Patient.objects.get(id=patient_id)
+                patient = Patient.objects.get(id=patientId)
             except Patient.DoesNotExist:
                 return Response({"error": "Patient non trouvé."}, status=status.HTTP_404_NOT_FOUND)
 
