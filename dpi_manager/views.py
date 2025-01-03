@@ -216,10 +216,12 @@ def afficher_liste_dpi(request):
                 'creationDate': dpi.date_creation.strftime('%Y-%m-%d %H:%M:%S'),
                 },
                 'patient': {
-                    'id': patient.user.id,
+                    'id': patient.id,
                     'name':f"{patient.user.first_name} {patient.user.last_name}",
                     'nss': patient.NSS,
-                    'email':patient.user.email 
+                    'email':patient.user.email,
+                    'date_naissance':patient.date_naissance,
+                    'adresse': patient.adresse,
                 },
                 'qr_code_url': dpi.qr_code.url if dpi.qr_code else None,
             })
