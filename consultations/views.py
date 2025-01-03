@@ -21,7 +21,7 @@ from consultations.serializers import (
 from sgph.serializers import OrdonnanceSerializer, MedicamentSerializer
 from sgph.models import Ordonnance, Medicament
 from django.shortcuts import get_object_or_404
-
+from users.models import Medecin, Patient
 
 @api_view(["POST"])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
@@ -225,3 +225,59 @@ def get_ordonnance(request, ordonnance_id):
         return Response({"error": "Ordonnance introuvable."}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"error": f"Erreur interne : {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def afficher_consultations(request, patient_id):
+    try:
+        user = request.user
+        data = []
+
+        # Cas : Médecin
+        if IsMedecin().has_permission(request, None):
+            try:
+                medecin = Medecin.objects.get(user=user)
+            except Medecin.DoesNotExist:
+                return Response({"error": "Médecin non trouvé."}, status=status.HTTP_404_NOT_FOUND)
+
+            if not patient_id:
+                return Response({"error": "ID du patient manquant."}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                patient = Patient.objects.get(id=patient_id)
+            except Patient.DoesNotExist:
+                return Response({"error": "Patient non trouvé."}, status=status.HTTP_404_NOT_FOUND)
+
+            consultations = Consultation.objects.filter(
+                dpi__patient=patient, dpi__medecin_traitant=medecin
+            ).order_by('-date')
+
+        # Cas : Patient
+        else:
+            try:
+                patient = Patient.objects.get(user=user)
+            except Patient.DoesNotExist:
+                return Response({"error": "Patient non trouvé."}, status=status.HTTP_404_NOT_FOUND)
+
+            consultations = Consultation.objects.filter(dpi__patient=patient).order_by('-date')
+
+        for consultation in consultations:
+            medecin = consultation.dpi.medecin_traitant
+            data.append({
+                'id': consultation.id,
+                'date': consultation.date.strftime('%Y-%m-%d %H:%M:%S'),
+                'medecin': {
+                    'id': medecin.user.id,
+                    'name': f"{medecin.user.first_name} {medecin.user.last_name}",
+                    'email': medecin.user.email,
+                }
+            })
+
+        return Response(data, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({"error": f"Erreur lors de la récupération des consultations : {str(e)}"}, 
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
