@@ -10,7 +10,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('docs/', include('docs.urls')),
+    #path('docs/', include('docs.urls')),
     path('admin/', admin.site.urls),
     path('dpi_manager/', include('dpi_manager.urls')),  
     path('user/', include('users.urls')),

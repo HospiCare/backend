@@ -49,7 +49,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'corsheaders',
     'rest_framework',
     'rest_framework_api_key',
     'rest_framework.authtoken',
@@ -86,14 +85,14 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-language',
-    'content-type',
     'dnt',
     'x-csrftoken',
-    'Authorization',  # Ajoutez 'authorization' ici
-    'x-requested-with',
+    'Authorization',  
     'if-modified-since',
     'cache-control',
     'pragma',
+    'X-Requested-With', 
+    'Content-Type',
 ]
 
 ROOT_URLCONF = 'app.urls'

@@ -131,10 +131,12 @@ def rechercher_par_QRcode(request):
             return Response({'error': 'Aucune image de QR code fournie'}, status=400)
         
         qr_image = request.FILES['qr_code']
+        print("qr image: ", qr_image)
         
         image = Image.open(qr_image)
         qr_data = decode(image)
-        
+        print("qr data: ", qr_data)
+
         if not qr_data:
             return Response({'error': 'QR code invalide ou non détecté'}, status=400)
         
@@ -157,15 +159,18 @@ def rechercher_par_QRcode(request):
         
         response_data = serializer.data
         response_data = {
+            
             'success': 'DPI trouvé',
             'dpi_id': dpi.id,
-            'patient_details': {
-                'nom': patient.user.first_name,
-                'prenom': patient.user.last_name,
+            'creationDate': dpi.date_creation.strftime('%Y-%m-%d %H:%M:%S'),
+
+            'patient': {
+                'name':f"{patient.user.first_name} {patient.user.last_name}",
                 'date_naissance': patient.date_naissance,
                 'adresse': patient.adresse,
-                'telephone': patient.telephone,
+                'phone': patient.telephone,
                 'email': patient.user.email,
+                'nss': patient.NSS
             },
             'medecin_traitant_details': {
                 'nom': dpi.medecin_traitant.user.first_name if dpi.medecin_traitant else None,
