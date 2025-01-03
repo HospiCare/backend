@@ -14,4 +14,6 @@ urlpatterns = [
     path("<int:id>/certificat/", views.get_certificat),
     path("<int:consultation_id>/creer_ordonnance/", views.creer_ordonnance),
     path("<int:ordonnance_id>/get_ordonnance/", views.get_ordonnance),
+    path('<int:patient_id>/afficher_consultations/', views.afficher_consultations),
+
 ]
