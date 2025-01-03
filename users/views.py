@@ -322,3 +322,15 @@ def rechercher_infirmiers(request):
 
     else:
         return Response({'error': 'Aucun terme de recherche fourni.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated, IsMedecin])
+def get_list_medecins(request):
+    """
+    Allow medecin & admins to find the list of medecins
+    """
+    medecins = User.objects.filter(user_type='medecin')
+    serializer = UserSerializer(medecins, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)

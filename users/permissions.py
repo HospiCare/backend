@@ -11,12 +11,14 @@ class UserTypePermission(BasePermission):
     Classe de base pour les permissions par type d'utilisateur.
     """
     user_type = None  
+    root_users = ["superuser", "admin"] # supersuer & admins do whatever they want
 
     def has_permission(self, request, view):
         if self.user_type is None:
             raise NotImplementedError("user_type must be defined in subclasses.")
 
-        if request.user.is_authenticated and request.user.user_type in self.user_type:
+        allowed_users_types = self.root_users + self.user_type
+        if request.user.is_authenticated and request.user.user_type in allowed_users_types:
             return True
         return False
 

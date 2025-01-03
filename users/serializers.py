@@ -19,15 +19,25 @@ class UserSerializer(serializers.ModelSerializer):
         user_type = instance.user_type
 
         if user_type == "patient" and hasattr(instance, "patient_profile"):
-            representation.update(PatientSerializer(instance.patient_profile).data)
+            patient = instance.patient_profile
+            representation.update(PatientSerializer(patient).data)
+            representation["patient_id"] = patient.id
         elif user_type == "medecin" and hasattr(instance, "medecin_profile"):
-            representation.update(MedecinSerializer(instance.medecin_profile).data)
+            medecin = instance.medecin_profile
+            representation.update(MedecinSerializer(medecin).data)
+            representation["medecin_id"] = medecin.id
         elif user_type == "laborantin" and hasattr(instance, "laborantin_profile"):
-            representation.update(LaborantinSerializer(instance.laborantin_profile).data)
+            laborantin = instance.laborantin_profile
+            representation.update(LaborantinSerializer(laborantin).data)
+            representation["laborantin_id"] = laborantin.id
         elif user_type == "radiologue" and hasattr(instance, "radiologue_profile"):
-            representation.update(RadiologueSerializer(instance.radiologue_profile).data)
+            radiologue = instance.radiologue_profile
+            representation.update(RadiologueSerializer(radiologue).data)
+            representation["radiologue_id"] = radiologue.id
         elif user_type == "infirmier" and hasattr(instance, "infirmier_profile"):
-            representation.update(InfirmierSerializer(instance.infirmier_profile).data)
+            infirmier = instance.infirmier_profile
+            representation.update(InfirmierSerializer(infirmier).data)
+            representation["infirmier_id"] = infirmier.id
 
         return representation
 
