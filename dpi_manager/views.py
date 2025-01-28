@@ -86,7 +86,7 @@ def creer_dpi(request):
 
 @api_view(["GET"])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
-@permission_classes([IsAuthenticated, IsMedecin]) 
+@permission_classes([IsAuthenticated]) # FIXME: only doctors should be allowed!
 def rechercher_dpi_par_NSS(request):
     NSS = request.query_params.get("NSS")  
     if not NSS:
@@ -100,12 +100,16 @@ def rechercher_dpi_par_NSS(request):
 
         response_data = serializer.data
         response_data['patient_details'] = {
+            'id': patient.user.id,
+            'name':f"{patient.user.first_name} {patient.user.last_name}",
             'nom': patient.user.first_name,
             'prenom': patient.user.last_name,
             'date_naissance': patient.date_naissance,
             'adresse': patient.adresse,
             'telephone': patient.telephone,
+            'phone': patient.telephone,
             'email': patient.user.email,
+            'nss': patient.NSS
         }
         if dpi.medecin_traitant:
             response_data['medecin_traitant_details'] = {
@@ -163,8 +167,11 @@ def rechercher_par_QRcode(request):
             'success': 'DPI trouvé',
             'dpi_id': dpi.id,
             'creationDate': dpi.date_creation.strftime('%Y-%m-%d %H:%M:%S'),
+            'mutuelle': dpi.mutuelle,
+            'phone': dpi.telephone_personne_contact,
 
             'patient': {
+                'id': patient.id,
                 'name':f"{patient.user.first_name} {patient.user.last_name}",
                 'date_naissance': patient.date_naissance,
                 'adresse': patient.adresse,
